@@ -1,4 +1,6 @@
-// Copying the text selected in the current tab, using the console's own Edit > Copy.
+// Copying text, using the console's own Edit menu. With text selected, Copy copies it. With nothing selected,
+// Copy switches the console into its selection mode (Edit > Mark), which works even when a program like Copilot
+// has taken over the mouse: then drag or use Shift+arrows to select, and press Enter or Copy again.
 
 using System;
 
@@ -16,7 +18,8 @@ partial class MainForm
         }
         else
         {
-            FlashTitle("Nothing selected - drag over text first");
+            PostMessage(s.Hwnd, WM_SYSCOMMAND, (IntPtr)ID_CONSOLE_MARK, IntPtr.Zero);
+            FlashTitle("Select text by dragging or with Shift+arrows, then press Enter to copy (Esc cancels)", 6000);
         }
         FitAndFocus(page);
     }

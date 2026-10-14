@@ -26,8 +26,8 @@ It confirms GitHub built that exact file from a commit in this repo, and shows w
 | --- | --- |
 | Ctrl+T or **+** after the tabs | New cmd tab |
 | Ctrl+Shift+T | New Copilot tab |
-| Drag with the mouse | Select text |
-| Ctrl+Shift+C | Copy the selected text (**Ctrl+C** and **Enter** also copy while text is selected; **Esc** clears the selection) |
+| Drag with the mouse | Select text (in a Copilot tab, press **Copy** first) |
+| Ctrl+Shift+C or **Copy** | Copy the selected text, or start selecting if nothing is selected (**Ctrl+C** and **Enter** also copy while text is selected; **Esc** clears the selection) |
 | Ctrl+Shift+V | Paste |
 | Ctrl+W, a tab's **X**, or middle-click it | Close tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
@@ -41,6 +41,8 @@ If you run CMD+ as administrator, every tab runs as administrator too, and the w
 ## Copilot
 
 **+ Copilot** opens a tab that runs `copilot`, so the Copilot CLI needs to be installed and on your PATH. It starts in the last folder you used. The arrow next to the button picks a different folder, which is then remembered. When Copilot exits, the tab drops back to a normal cmd prompt.
+
+Copilot takes over the mouse, so dragging in a Copilot tab doesn't select text on its own. Press **Copy** with nothing selected to switch the tab into cmd's selection mode, then drag (or use Shift+arrows) and press **Enter** or **Copy** to copy. Copilot's output pauses while you're selecting.
 
 **Paste** types the clipboard into the tab as if you'd typed it, so it works inside Copilot even if right-click paste doesn't. When pasting several lines into Copilot, CMD+ asks whether to join them into one line, since a line break can send the prompt early.
 
