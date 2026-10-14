@@ -2,7 +2,7 @@
 
 A tiny tabbed window for `cmd.exe`, made for Windows Server 2019, where Windows Terminal isn't supported. It also has a one-click launcher for GitHub Copilot CLI and copy/paste that works while Copilot is running.
 
-Each tab is a real cmd window, so everything behaves exactly like normal cmd. It's a single C# file with no dependencies beyond the .NET Framework already included in Windows.
+Each tab is a real cmd window, so everything behaves exactly like normal cmd. It's a handful of C# files with no dependencies beyond the .NET Framework already included in Windows.
 
 ## Run it
 
