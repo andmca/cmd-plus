@@ -10,7 +10,7 @@ if not exist "%CSC%" (
     exit /b 1
 )
 
-"%CSC%" /nologo /target:winexe /optimize+ /win32icon:CMDPlus.ico /resource:CMDPlus.ico,CMDPlus.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:CMDPlus.exe CMDPlus.cs
+"%CSC%" /nologo /target:winexe /optimize+ /win32icon:CMDPlus.ico /resource:CMDPlus.ico,CMDPlus.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:CMDPlus.exe *.cs
 if errorlevel 1 (
     echo Build failed.
     exit /b 1
