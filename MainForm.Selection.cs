@@ -12,7 +12,7 @@ partial class MainForm
     Session dragSession;
     POINT dragStart;
     IntPtr mouseHook;
-    LowLevelMouseProc mouseHookProc;   // kept in a field so it isn't garbage-collected
+    LowLevelHookProc mouseHookProc;   // kept in a field so it isn't garbage-collected
 
     void CopySelection()
     {
@@ -111,9 +111,7 @@ partial class MainForm
 
     static bool ModifierHeld()
     {
-        return (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0
-            || (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0
-            || (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+        return IsKeyDown(VK_SHIFT) || IsKeyDown(VK_CONTROL) || IsKeyDown(VK_MENU);
     }
 
     static void ClearSelection(Session s)
