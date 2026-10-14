@@ -75,18 +75,7 @@ partial class MainForm : Form
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
-        mouseHookProc = MouseHook;
-        mouseHook = SetWindowsHookEx(WH_MOUSE_LL, mouseHookProc, GetModuleHandle(null), 0);
-        keyboardHookProc = KeyboardHook;
-        keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardHookProc, GetModuleHandle(null), 0);
         NewCmdTab();
-    }
-
-    protected override void OnFormClosed(FormClosedEventArgs e)
-    {
-        if (mouseHook != IntPtr.Zero) UnhookWindowsHookEx(mouseHook);
-        if (keyboardHook != IntPtr.Zero) UnhookWindowsHookEx(keyboardHook);
-        base.OnFormClosed(e);
     }
 
     // Tabs opened from an elevated window are elevated too, so the title says so.

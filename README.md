@@ -34,7 +34,7 @@ If you run CMD+ as administrator, every tab runs as administrator too, and the w
 
 **+ Copilot** opens a tab that runs `copilot`, so the Copilot CLI needs to be installed and on your PATH. It starts in the last folder you used. The arrow next to the button picks a different folder, which is then remembered. When Copilot exits, the tab drops back to a normal cmd prompt.
 
-Copilot takes over the mouse, which normally stops you selecting text or right-click pasting in cmd. CMD+ works around this: dragging still selects text in a Copilot tab, then Ctrl+Shift+C copies it and Ctrl+Shift+V pastes. Copilot's output pauses while text is selected and carries on once you copy or press Esc. When pasting several lines into Copilot, CMD+ asks whether to join them into one line, since a line break can send the prompt early.
+**Paste** types the clipboard into the tab as if you'd typed it, so it works inside Copilot even if right-click paste doesn't. When pasting several lines into Copilot, CMD+ asks whether to join them into one line, since a line break can send the prompt early.
 
 ## Requirements
 
