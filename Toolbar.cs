@@ -1,4 +1,4 @@
-// The toolbar's look: flat and white so it joins up with the selected tab, a light grey hover, and each
+// The toolbar's look: flat and white with a light grey hover, and each
 // button's shortcut drawn in grey after its name (button text is "Name  Shortcut", split at the double space).
 
 using System.Drawing;
