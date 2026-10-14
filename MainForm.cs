@@ -56,8 +56,6 @@ partial class MainForm : Form
             ToolTipText = "Drag over text to select it, then copy. Esc clears the selection."
         });
         toolbar.Items.Add(new ToolStripButton("Paste  Ctrl+Shift+V", null, delegate { Paste(); }));
-        toolbar.Items.Add(new ToolStripSeparator());
-        toolbar.Items.Add(new ToolStripButton("Close tab  Ctrl+W", null, delegate { CloseTab(tabs.SelectedTab); }));
 
         foreach (ToolStripItem item in toolbar.Items)
         {
@@ -79,12 +77,15 @@ partial class MainForm : Form
         base.OnShown(e);
         mouseHookProc = MouseHook;
         mouseHook = SetWindowsHookEx(WH_MOUSE_LL, mouseHookProc, GetModuleHandle(null), 0);
+        keyboardHookProc = KeyboardHook;
+        keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboardHookProc, GetModuleHandle(null), 0);
         NewCmdTab();
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         if (mouseHook != IntPtr.Zero) UnhookWindowsHookEx(mouseHook);
+        if (keyboardHook != IntPtr.Zero) UnhookWindowsHookEx(keyboardHook);
         base.OnFormClosed(e);
     }
 

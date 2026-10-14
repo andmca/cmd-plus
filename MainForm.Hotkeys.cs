@@ -1,48 +1,71 @@
-// Keyboard shortcuts. They're registered only while the CMD+ window is active, so they never affect other apps.
+// Keyboard shortcuts. A low-level keyboard hook sees each key before the console does, and acts only while the
+// CMD+ window is in front, so the shortcuts work whichever console has focus and never affect other apps.
 
 using System;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 partial class MainForm
 {
-    const int HK_NEW = 1, HK_COPILOT = 2, HK_COPY = 3, HK_PASTE = 4, HK_CLOSE = 5, HK_NEXT = 6, HK_PREV = 7;
+    IntPtr keyboardHook;
+    LowLevelHookProc keyboardHookProc;   // kept in a field so it isn't garbage-collected
+    int heldShortcutKey;                 // the shortcut key being held, so auto-repeat doesn't fire it again
 
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
-        RegisterHotKey(Handle, HK_NEW, MOD_CONTROL | MOD_NOREPEAT, (uint)Keys.T);
-        RegisterHotKey(Handle, HK_COPILOT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, (uint)Keys.T);
-        RegisterHotKey(Handle, HK_COPY, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, (uint)Keys.C);
-        RegisterHotKey(Handle, HK_PASTE, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, (uint)Keys.V);
-        RegisterHotKey(Handle, HK_CLOSE, MOD_CONTROL | MOD_NOREPEAT, (uint)Keys.W);
-        RegisterHotKey(Handle, HK_NEXT, MOD_CONTROL | MOD_NOREPEAT, (uint)Keys.Tab);
-        RegisterHotKey(Handle, HK_PREV, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, (uint)Keys.Tab);
         BeginInvoke((MethodInvoker)delegate { FitAndFocus(tabs.SelectedTab); });
     }
 
-    protected override void OnDeactivate(EventArgs e)
+    IntPtr KeyboardHook(int code, IntPtr wParam, IntPtr lParam)
     {
-        base.OnDeactivate(e);
-        for (int id = HK_NEW; id <= HK_PREV; id++) UnregisterHotKey(Handle, id);
+        if (code >= 0 && GetForegroundWindow() == Handle)
+        {
+            var info = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+            int msg = wParam.ToInt32();
+            int vk = (int)info.vkCode;
+
+            if ((msg == WM_KEYUP || msg == WM_SYSKEYUP) && vk == heldShortcutKey)
+            {
+                heldShortcutKey = 0;
+                return (IntPtr)1;   // the console never saw the key go down, so it doesn't see it come up either
+            }
+
+            if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)
+            {
+                if (vk == heldShortcutKey) return (IntPtr)1;   // auto-repeat
+                MethodInvoker action = ShortcutFor(vk);
+                if (action != null)
+                {
+                    heldShortcutKey = vk;
+                    BeginInvoke(action);   // run it after the hook returns, as hooks must be quick
+                    return (IntPtr)1;
+                }
+            }
+        }
+        return CallNextHookEx(keyboardHook, code, wParam, lParam);
     }
 
-    protected override void WndProc(ref Message m)
+    // The action for a key pressed with the current modifiers, or null if it isn't a shortcut.
+    MethodInvoker ShortcutFor(int vk)
     {
-        if (m.Msg == WM_HOTKEY)
+        bool ctrl = IsKeyDown(VK_CONTROL), shift = IsKeyDown(VK_SHIFT), alt = IsKeyDown(VK_MENU);
+        if (!ctrl || alt) return null;
+
+        switch ((Keys)vk)
         {
-            switch (m.WParam.ToInt32())
-            {
-                case HK_NEW: NewCmdTab(); break;
-                case HK_COPILOT: NewCopilotTab(); break;
-                case HK_COPY: CopySelection(); break;
-                case HK_PASTE: Paste(); break;
-                case HK_CLOSE: CloseTab(tabs.SelectedTab); break;
-                case HK_NEXT: SelectNextTab(1); break;
-                case HK_PREV: SelectNextTab(-1); break;
-            }
-            return;
+            case Keys.T: return shift ? (MethodInvoker)NewCopilotTab : NewCmdTab;
+            case Keys.C: return shift ? (MethodInvoker)CopySelection : null;   // plain Ctrl+C stays with cmd
+            case Keys.V: return shift ? (MethodInvoker)Paste : null;
+            case Keys.W: return shift ? null : (MethodInvoker)delegate { CloseTab(tabs.SelectedTab); };
+            case Keys.Tab: return delegate { SelectNextTab(shift ? -1 : 1); };
+            default: return null;
         }
-        base.WndProc(ref m);
+    }
+
+    static bool IsKeyDown(int vk)
+    {
+        return (GetAsyncKeyState(vk) & 0x8000) != 0;
     }
 
     void SelectNextTab(int step)

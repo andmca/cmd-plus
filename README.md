@@ -19,12 +19,12 @@ The exe isn't code-signed, so Windows may show a SmartScreen warning the first t
 | Ctrl+T or **+** after the tabs | New cmd tab |
 | Ctrl+Shift+T | New Copilot tab |
 | Drag with the mouse | Select text |
-| Ctrl+Shift+C | Copy the selected text (**Enter** also copies, **Esc** clears the selection) |
+| Ctrl+Shift+C | Copy the selected text (**Ctrl+C** and **Enter** also copy while text is selected; **Esc** clears the selection) |
 | Ctrl+Shift+V | Paste |
 | Ctrl+W, a tab's **X**, or middle-click it | Close tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
 
-Everything is also on the toolbar. The shortcuts only apply while the CMD+ window is focused.
+The toolbar and the tabs have buttons for these too. The shortcuts only apply while the CMD+ window is focused.
 
 Closing a tab, or the whole window, asks you to confirm first, with an extra warning if a Copilot session would be ended. Typing `exit` in a tab closes it without asking.
 
