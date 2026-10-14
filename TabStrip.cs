@@ -1,4 +1,4 @@
-// The row of tabs at the top, drawn in the style of Windows 11 Notepad: each tab has an X to close it,
+// The row of tabs above the consoles, drawn in the style of Windows 11 Notepad: each tab has an X to close it,
 // and + after the last tab opens a new cmd tab. It drives a PageHost, which holds the consoles.
 
 using System;
@@ -24,6 +24,10 @@ class TabStrip : Control
     static readonly Color TabHover = Color.FromArgb(233, 233, 233);
     static readonly Color ButtonHover = Color.FromArgb(218, 218, 218);
     static readonly Color Ink = Color.FromArgb(26, 26, 26);
+    // The selected tab is console black, so it runs straight into the console below it.
+    static readonly Color SelectedBack = Color.Black;
+    static readonly Color SelectedInk = Color.FromArgb(242, 242, 242);
+    static readonly Color SelectedButtonHover = Color.FromArgb(64, 64, 64);
     static readonly Color Divider = Color.FromArgb(208, 208, 208);
 
     readonly TabControl tabs;
@@ -161,7 +165,7 @@ class TabStrip : Control
             Rectangle r = rects[i];
             if (i == selected || i == hoverTab)
                 using (var path = Rounded(r, Px(7), true))
-                using (var brush = new SolidBrush(i == selected ? Color.White : TabHover))
+                using (var brush = new SolidBrush(i == selected ? SelectedBack : TabHover))
                     g.FillPath(brush, path);
 
             // A thin divider between two tabs that are both plain.
@@ -171,16 +175,17 @@ class TabStrip : Control
                 using (var pen = new Pen(Divider))
                     g.DrawLine(pen, r.Right, r.Top + r.Height / 4, r.Right, r.Bottom - r.Height / 4);
 
+            Color ink = i == selected ? SelectedInk : Ink;
             Rectangle close = CloseRect(r);
             var textRect = new Rectangle(r.Left + Px(12), r.Top, close.Left - r.Left - Px(14), r.Height);
-            TextRenderer.DrawText(g, tabs.TabPages[i].Text, Font, textRect, Ink,
+            TextRenderer.DrawText(g, tabs.TabPages[i].Text, Font, textRect, ink,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
                 TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
 
-            if (i == hoverTab && hoverClose) FillButton(g, close);
+            if (i == hoverTab && hoverClose) FillButton(g, close, i == selected ? SelectedButtonHover : ButtonHover);
             float arm = Px(4.5F);
             PointF c = Centre(close);
-            using (var pen = new Pen(Ink, Px(1.2F)))
+            using (var pen = new Pen(ink, Px(1.2F)))
             {
                 g.DrawLine(pen, c.X - arm, c.Y - arm, c.X + arm, c.Y + arm);
                 g.DrawLine(pen, c.X - arm, c.Y + arm, c.X + arm, c.Y - arm);
@@ -188,7 +193,7 @@ class TabStrip : Control
         }
 
         Rectangle plus = PlusRect(rects);
-        if (hoverPlus) FillButton(g, plus);
+        if (hoverPlus) FillButton(g, plus, ButtonHover);
         float half = Px(6);
         PointF p = Centre(plus);
         using (var pen = new Pen(Ink, Px(1.2F)))
@@ -198,10 +203,10 @@ class TabStrip : Control
         }
     }
 
-    void FillButton(Graphics g, Rectangle r)
+    void FillButton(Graphics g, Rectangle r, Color colour)
     {
         using (var path = Rounded(r, Px(4), false))
-        using (var brush = new SolidBrush(ButtonHover))
+        using (var brush = new SolidBrush(colour))
             g.FillPath(brush, path);
     }
 
@@ -210,7 +215,7 @@ class TabStrip : Control
         return new PointF(r.Left + r.Width / 2F, r.Top + r.Height / 2F);
     }
 
-    // A rectangle with rounded corners: all four, or just the top two for a tab that runs into the toolbar.
+    // A rectangle with rounded corners: all four, or just the top two for a tab that runs into the console.
     static GraphicsPath Rounded(Rectangle r, int radius, bool topOnly)
     {
         int d = radius * 2;

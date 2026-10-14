@@ -68,10 +68,10 @@ partial class MainForm : Form
         tabs.Dock = DockStyle.Fill;
         tabs.SelectedIndexChanged += delegate { BeginInvoke((MethodInvoker)delegate { FitAndFocus(tabs.SelectedTab); }); };
 
-        // Docked controls stack from the last one added, so this puts the tab strip on top, then the toolbar.
+        // Docked controls stack from the last one added, so this puts the toolbar on top, then the tab strip.
         Controls.Add(tabs);
-        Controls.Add(toolbar);
         Controls.Add(tabStrip);
+        Controls.Add(toolbar);
     }
 
     protected override void OnShown(EventArgs e)
