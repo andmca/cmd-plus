@@ -1,4 +1,4 @@
-// The main window: the toolbar, and starting, sizing, focusing and closing tabs.
+// The main window: the tab strip and toolbar, and starting, sizing, focusing and closing tabs.
 
 using System;
 using System.Diagnostics;
@@ -11,7 +11,7 @@ partial class MainForm : Form
 {
     static readonly string UserProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-    readonly TabControl tabs = new TabControl();
+    readonly TabControl tabs = new PageHost();
     readonly string baseTitle = IsElevated() ? "CMD+ (Administrator)" : "CMD+";
     readonly System.Windows.Forms.Timer titleTimer = new System.Windows.Forms.Timer { Interval = 1500 };
     int cmdCount;
@@ -30,30 +30,48 @@ partial class MainForm : Form
 
         titleTimer.Tick += delegate { titleTimer.Stop(); Text = baseTitle; };
 
-        var strip = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden };
-        strip.Items.Add(new ToolStripButton("+ cmd  (Ctrl+T)", null, delegate { NewCmdTab(); }));
+        var tabStrip = new TabStrip(tabs);
+        tabStrip.NewTabRequested += NewCmdTab;
+        tabStrip.CloseRequested += CloseTab;
 
-        copilotButton.Text = "+ Copilot  (Ctrl+Shift+T)";
+        // Button text is "Name  Shortcut"; the renderer draws the shortcut in grey.
+        var toolbar = new ToolStrip
+        {
+            GripStyle = ToolStripGripStyle.Hidden,
+            Renderer = new ToolbarRenderer(),
+            Font = new Font("Consolas", 9F),
+            Padding = new Padding(6, 3, 6, 3)
+        };
+        toolbar.Items.Add(new ToolStripButton("+ cmd  Ctrl+T", null, delegate { NewCmdTab(); }));
+
+        copilotButton.Text = "+ Copilot  Ctrl+Shift+T";
         copilotButton.ButtonClick += delegate { NewCopilotTab(); };
         copilotButton.DropDownItems.Add("Start Copilot in another folder...", null, delegate { ChooseFolderAndStartCopilot(); });
         UpdateCopilotTooltip();
-        strip.Items.Add(copilotButton);
+        toolbar.Items.Add(copilotButton);
 
-        strip.Items.Add(new ToolStripSeparator());
-        strip.Items.Add(new ToolStripButton("Copy  (Ctrl+Shift+C)", null, delegate { CopySelection(); })
+        toolbar.Items.Add(new ToolStripSeparator());
+        toolbar.Items.Add(new ToolStripButton("Copy  Ctrl+Shift+C", null, delegate { CopySelection(); })
         {
             ToolTipText = "Drag over text to select it, then copy. Esc clears the selection."
         });
-        strip.Items.Add(new ToolStripButton("Paste  (Ctrl+Shift+V)", null, delegate { Paste(); }));
-        strip.Items.Add(new ToolStripSeparator());
-        strip.Items.Add(new ToolStripButton("Close tab  (Ctrl+W)", null, delegate { CloseTab(tabs.SelectedTab); }));
+        toolbar.Items.Add(new ToolStripButton("Paste  Ctrl+Shift+V", null, delegate { Paste(); }));
+        toolbar.Items.Add(new ToolStripSeparator());
+        toolbar.Items.Add(new ToolStripButton("Close tab  Ctrl+W", null, delegate { CloseTab(tabs.SelectedTab); }));
+
+        foreach (ToolStripItem item in toolbar.Items)
+        {
+            item.Padding = new Padding(8, 4, 8, 4);
+            item.Margin = new Padding(item is ToolStripSeparator ? 6 : 2, 0, item is ToolStripSeparator ? 6 : 2, 0);
+        }
 
         tabs.Dock = DockStyle.Fill;
         tabs.SelectedIndexChanged += delegate { BeginInvoke((MethodInvoker)delegate { FitAndFocus(tabs.SelectedTab); }); };
-        tabs.MouseUp += OnTabMouseUp;
 
+        // Docked controls stack from the last one added, so this puts the tab strip on top, then the toolbar.
         Controls.Add(tabs);
-        Controls.Add(strip);
+        Controls.Add(toolbar);
+        Controls.Add(tabStrip);
     }
 
     protected override void OnShown(EventArgs e)
@@ -216,19 +234,6 @@ partial class MainForm : Form
         else FitAndFocus(tabs.SelectedTab);
     }
 
-    void OnTabMouseUp(object sender, MouseEventArgs e)
-    {
-        if (e.Button != MouseButtons.Middle) return;
-        for (int i = 0; i < tabs.TabCount; i++)
-        {
-            if (tabs.GetTabRect(i).Contains(e.Location))
-            {
-                CloseTab(tabs.TabPages[i]);
-                return;
-            }
-        }
-    }
-
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         // Closing the window ends every tab, so confirm first (but not when Windows is shutting down).
@@ -260,10 +265,10 @@ partial class MainForm : Form
             if (s != null && s.IsCopilot) copilotTabs++;
         }
 
-        string message = tabs.TabCount == 1 ? "Close Tabs and its open tab?" : "Close Tabs and all " + tabs.TabCount + " open tabs?";
+        string message = tabs.TabCount == 1 ? "Close CMD+ and its open tab?" : "Close CMD+ and all " + tabs.TabCount + " open tabs?";
         if (copilotTabs == 1) message += "\n\nThis will also end the Copilot session.";
         if (copilotTabs > 1) message += "\n\nThis will also end all " + copilotTabs + " Copilot sessions.";
-        return Confirm(message, "Close Tabs", copilotTabs > 0);
+        return Confirm(message, "Close CMD+", copilotTabs > 0);
     }
 
     // A yes/no question with No as the default. The warning icon is for when Copilot sessions would end.

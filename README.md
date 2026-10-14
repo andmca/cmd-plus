@@ -16,12 +16,12 @@ The exe isn't code-signed, so Windows may show a SmartScreen warning the first t
 
 | Keys | Action |
 | --- | --- |
-| Ctrl+T | New cmd tab |
+| Ctrl+T or **+** after the tabs | New cmd tab |
 | Ctrl+Shift+T | New Copilot tab |
 | Drag with the mouse | Select text |
 | Ctrl+Shift+C | Copy the selected text (**Enter** also copies, **Esc** clears the selection) |
 | Ctrl+Shift+V | Paste |
-| Ctrl+W or middle-click a tab | Close tab |
+| Ctrl+W, a tab's **X**, or middle-click it | Close tab |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
 
 Everything is also on the toolbar. The shortcuts only apply while the CMD+ window is focused.
