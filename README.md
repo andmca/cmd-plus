@@ -1,0 +1,50 @@
+# CMD+
+
+A tiny tabbed window for `cmd.exe`, made for Windows Server 2019, where Windows Terminal isn't supported. It also has a one-click launcher for GitHub Copilot CLI and copy/paste that works while Copilot is running.
+
+Each tab is a real cmd window, so everything behaves exactly like normal cmd. It's a single C# file with no dependencies beyond the .NET Framework already included in Windows.
+
+## Run it
+
+**Option 1: download.** Grab `CMDPlus.exe` from the [Releases](../../releases) page and run it. Nothing to install.
+
+The exe isn't code-signed, so Windows may show a SmartScreen warning the first time. Choose **More info → Run anyway**, or build it yourself (option 2).
+
+**Option 2: build it yourself.** Clone or download this repo and double-click `build.cmd`. It produces `CMDPlus.exe` in the same folder using the C# compiler that ships with Windows, so you don't need Visual Studio or an SDK.
+
+## Shortcuts
+
+| Keys | Action |
+| --- | --- |
+| Ctrl+T | New cmd tab |
+| Ctrl+Shift+T | New Copilot tab |
+| Drag with the mouse | Select text |
+| Ctrl+Shift+C | Copy the selected text (**Enter** also copies, **Esc** clears the selection) |
+| Ctrl+Shift+V | Paste |
+| Ctrl+W or middle-click a tab | Close tab |
+| Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
+
+Everything is also on the toolbar. The shortcuts only apply while the CMD+ window is focused.
+
+Closing a tab, or the whole window, asks you to confirm first, with an extra warning if a Copilot session would be ended. Typing `exit` in a tab closes it without asking.
+
+If you run CMD+ as administrator, every tab runs as administrator too, and the window title shows **CMD+ (Administrator)**.
+
+## Copilot
+
+**+ Copilot** opens a tab that runs `copilot`, so the Copilot CLI needs to be installed and on your PATH. It starts in the last folder you used. The arrow next to the button picks a different folder, which is then remembered. When Copilot exits, the tab drops back to a normal cmd prompt.
+
+Copilot takes over the mouse, which normally stops you selecting text or right-click pasting in cmd. CMD+ works around this: dragging still selects text in a Copilot tab, then Ctrl+Shift+C copies it and Ctrl+Shift+V pastes. Copilot's output pauses while text is selected and carries on once you copy or press Esc. When pasting several lines into Copilot, CMD+ asks whether to join them into one line, since a line break can send the prompt early.
+
+## Requirements
+
+Windows with .NET Framework 4.x, which is built into Windows Server 2016 and later and Windows 10 and later.
+
+## Publishing a release (maintainers)
+
+Every push builds `CMDPlus.exe` with GitHub Actions. To publish a release with the exe attached, either:
+
+- on GitHub, go to **Releases → Draft a new release**, create a tag such as `v1.0.0`, and publish it; or
+- push a version tag: `git tag v1.0.0` then `git push origin v1.0.0`.
+
+`CMDPlus.exe` is attached to the release a couple of minutes later.
