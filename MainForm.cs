@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
@@ -10,6 +11,8 @@ using System.Windows.Forms;
 partial class MainForm : Form
 {
     static readonly string UserProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    // The full path, so Windows can't pick up a different cmd.exe from another folder.
+    static readonly string CmdExe = Path.Combine(Environment.SystemDirectory, "cmd.exe");
 
     readonly TabControl tabs = new PageHost();
     readonly string baseTitle = IsElevated() ? "CMD+ (Administrator)" : "CMD+";
@@ -103,7 +106,7 @@ partial class MainForm : Form
 
     void NewTab(string title, string arguments, string folder, bool isCopilot)
     {
-        var p = Process.Start(new ProcessStartInfo("cmd.exe", arguments)
+        var p = Process.Start(new ProcessStartInfo(CmdExe, arguments)
         {
             UseShellExecute = true,
             WindowStyle = ProcessWindowStyle.Hidden,   // avoids a flash before it's moved into the tab

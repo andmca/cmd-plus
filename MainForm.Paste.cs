@@ -19,6 +19,9 @@ partial class MainForm
         if (string.IsNullOrEmpty(text)) return;
 
         text = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        // Drop invisible control characters (keeping tabs and new lines). Typed into a tab they act as keys, such as
+        // Esc or Ctrl+C, so copied text could otherwise do something other than what it looked like.
+        text = Regex.Replace(text, @"[\x00-\x08\x0B-\x1F\x7F-\x9F]", "");
         if (s.IsCopilot)
         {
             text = text.TrimEnd('\n');   // don't send the prompt just because the copied text ended with a new line
