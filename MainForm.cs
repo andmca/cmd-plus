@@ -47,7 +47,7 @@ partial class MainForm : Form
         copilotButton.Text = "+ Copilot  Ctrl+Shift+T";
         copilotButton.ButtonClick += delegate { NewCopilotTab(); };
         copilotButton.DropDownItems.Add("Start Copilot in another folder...", null, delegate { ChooseFolderAndStartCopilot(); });
-        UpdateCopilotTooltip();
+        copilotButton.ToolTipText = "Start Copilot in " + UserProfile;
         toolbar.Items.Add(copilotButton);
 
         toolbar.Items.Add(new ToolStripSeparator());
