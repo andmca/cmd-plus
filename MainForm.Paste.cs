@@ -1,4 +1,5 @@
-// Pasting: types the clipboard text into the console as keyboard input.
+// Pasting, by typing the clipboard text into the console's input as if it came from the keyboard.
+// Unlike right-click paste, this works inside Copilot too.
 
 using System;
 using System.Collections.Generic;
@@ -7,9 +8,9 @@ using System.Windows.Forms;
 
 partial class MainForm
 {
-    // Types the clipboard text straight into the console's input, as if it were typed on the keyboard.
-    void Paste(TabPage page)
+    void Paste()
     {
+        var page = tabs.SelectedTab;
         var s = SessionOf(page);
         if (s == null) return;
 
@@ -20,7 +21,7 @@ partial class MainForm
         text = text.Replace("\r\n", "\n").Replace('\r', '\n');
         if (s.IsCopilot)
         {
-            text = text.TrimEnd('\n');   // don't send the prompt just because the copied text ended with a newline
+            text = text.TrimEnd('\n');   // don't send the prompt just because the copied text ended with a new line
             if (text.Contains("\n"))
             {
                 var answer = MessageBox.Show(this,
@@ -33,73 +34,70 @@ partial class MainForm
         }
         if (text.Length == 0) return;
 
-        if (!SendText(s, text))
+        if (!TypeIntoConsole(s, text))
             MessageBox.Show(this, "Couldn't paste into this tab.", "CMD+");
         FitAndFocus(page);
     }
 
-    static bool SendText(Session s, string text)
+    static bool TypeIntoConsole(Session s, string text)
     {
-        if (!AttachConsole((uint)s.Proc.Id)) return false;
-        SetConsoleCtrlHandler(IntPtr.Zero, true);   // ignore a stray Ctrl+C while briefly attached
-        IntPtr input = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                  IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
-        try
+        var keys = new List<INPUT_RECORD>(text.Length * 2);
+        foreach (char c in text) AddKeyPress(keys, c == '\n' ? '\r' : c);
+
+        return InConsole(s.Proc, delegate
         {
+            IntPtr input = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                      IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
             if (input == INVALID_HANDLE_VALUE) return false;
-
-            var records = new List<INPUT_RECORD>(text.Length * 2);
-            foreach (char ch in text)
+            try
             {
-                char c = ch == '\n' ? '\r' : ch;
-                ushort vk = 0;
-                uint state = 0;
-                if (c == '\r') vk = VK_RETURN;
-                else if (c == '\t') vk = VK_TAB;
-                else
+                const int chunk = 512;   // one very large write can fail
+                for (int i = 0; i < keys.Count; i += chunk)
                 {
-                    short scan = VkKeyScan(c);
-                    if (scan != -1 && ((scan >> 8) & 0xFE) == 0)   // a plain or Shift key on this layout
-                    {
-                        vk = (ushort)(scan & 0xFF);
-                        if (((scan >> 8) & 1) != 0) state = SHIFT_PRESSED;
-                    }
+                    var part = keys.GetRange(i, Math.Min(chunk, keys.Count - i)).ToArray();
+                    uint written;
+                    if (!WriteConsoleInput(input, part, (uint)part.Length, out written)) return false;
                 }
-                ushort sc = vk == 0 ? (ushort)0 : (ushort)MapVirtualKey(vk, 0);
-                records.Add(Key(true, vk, sc, c, state));
-                records.Add(Key(false, vk, sc, c, state));
+                return true;
             }
-
-            var all = records.ToArray();
-            const int chunk = 512;
-            for (int i = 0; i < all.Length; i += chunk)
+            finally
             {
-                int n = Math.Min(chunk, all.Length - i);
-                var part = new INPUT_RECORD[n];
-                Array.Copy(all, i, part, 0, n);
-                uint written;
-                if (!WriteConsoleInput(input, part, (uint)n, out written)) return false;
+                CloseHandle(input);
             }
-            return true;
-        }
-        finally
-        {
-            if (input != INVALID_HANDLE_VALUE) CloseHandle(input);
-            FreeConsole();
-            SetConsoleCtrlHandler(IntPtr.Zero, false);
-        }
+        });
     }
 
-    static INPUT_RECORD Key(bool down, ushort vk, ushort scan, char c, uint state)
+    // Adds key down and key up events for one character. A character that has no plain or Shift key on
+    // this keyboard layout is sent as the character alone.
+    static void AddKeyPress(List<INPUT_RECORD> keys, char c)
     {
-        var r = new INPUT_RECORD();
-        r.EventType = KEY_EVENT;
-        r.KeyDown = down ? 1 : 0;
-        r.RepeatCount = 1;
-        r.VirtualKeyCode = vk;
-        r.VirtualScanCode = scan;
-        r.UnicodeChar = c;
-        r.ControlKeyState = state;
-        return r;
+        ushort vk = 0;
+        uint state = 0;
+        if (c == '\r') vk = VK_RETURN;
+        else if (c == '\t') vk = VK_TAB;
+        else
+        {
+            short scan = VkKeyScan(c);
+            if (scan != -1 && ((scan >> 8) & 0xFE) == 0)
+            {
+                vk = (ushort)(scan & 0xFF);
+                if (((scan >> 8) & 1) != 0) state = SHIFT_PRESSED;
+            }
+        }
+
+        var down = new INPUT_RECORD
+        {
+            EventType = KEY_EVENT,
+            KeyDown = 1,
+            RepeatCount = 1,
+            VirtualKeyCode = vk,
+            VirtualScanCode = vk == 0 ? (ushort)0 : (ushort)MapVirtualKey(vk, 0),
+            UnicodeChar = c,
+            ControlKeyState = state
+        };
+        var up = down;
+        up.KeyDown = 0;
+        keys.Add(down);
+        keys.Add(up);
     }
 }
