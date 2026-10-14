@@ -13,7 +13,7 @@ partial class MainForm : Form
 
     readonly TabControl tabs = new PageHost();
     readonly string baseTitle = IsElevated() ? "CMD+ (Administrator)" : "CMD+";
-    readonly System.Windows.Forms.Timer titleTimer = new System.Windows.Forms.Timer { Interval = 1500 };
+    readonly System.Windows.Forms.Timer titleTimer = new System.Windows.Forms.Timer();
     int cmdCount;
     bool closing;
 
@@ -53,7 +53,7 @@ partial class MainForm : Form
         toolbar.Items.Add(new ToolStripSeparator());
         toolbar.Items.Add(new ToolStripButton("Copy  Ctrl+Shift+C", null, delegate { CopySelection(); })
         {
-            ToolTipText = "Drag over text to select it, then copy. Esc clears the selection."
+            ToolTipText = "Copies the selected text. With nothing selected, starts selecting (works in Copilot too)."
         });
         toolbar.Items.Add(new ToolStripButton("Paste  Ctrl+Shift+V", null, delegate { Paste(); }));
 
@@ -85,10 +85,12 @@ partial class MainForm : Form
             return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
     }
 
-    void FlashTitle(string message)
+    // Shows a short message in the title bar for a moment (1.5 seconds unless said otherwise).
+    void FlashTitle(string message, int milliseconds = 1500)
     {
         Text = baseTitle + "  -  " + message;
         titleTimer.Stop();
+        titleTimer.Interval = milliseconds;
         titleTimer.Start();
     }
 

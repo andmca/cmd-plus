@@ -11,7 +11,7 @@ partial class MainForm
     const int WS_MINIMIZEBOX = 0x00020000, WS_MAXIMIZEBOX = 0x00010000;
     const int SW_HIDE = 0, SW_SHOW = 5;
     const int WM_CLOSE = 0x0010, WM_SYSCOMMAND = 0x0112, WM_HOTKEY = 0x0312;
-    const int ID_CONSOLE_COPY = 0xFFF0;   // the console window's Edit > Copy
+    const int ID_CONSOLE_COPY = 0xFFF0, ID_CONSOLE_MARK = 0xFFF2;   // the console window's Edit > Copy / Mark
 
     // Keyboard
     const uint MOD_CONTROL = 0x2, MOD_SHIFT = 0x4, MOD_NOREPEAT = 0x4000;
