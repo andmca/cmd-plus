@@ -10,7 +10,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write         # attach the exe to releases
+  id-token: write         # sign the build attestation
+  attestations: write     # store the build attestation
+  artifact-metadata: write
 
 jobs:
   build:
@@ -21,6 +24,14 @@ jobs:
       - name: Build CMDPlus.exe
         shell: cmd
         run: call build.cmd
+
+      # A signed record that this exact CMDPlus.exe was built here from this commit. Anyone can check a download
+      # against it with: gh attestation verify CMDPlus.exe --repo andmca/cmd-plus
+      - name: Attest CMDPlus.exe
+        if: github.event_name != 'pull_request'
+        uses: actions/attest@v4
+        with:
+          subject-path: CMDPlus.exe
 
       - name: Upload build
         uses: actions/upload-artifact@v4

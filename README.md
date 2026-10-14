@@ -10,6 +10,14 @@ Each tab is a real cmd window, so everything behaves exactly like normal cmd. It
 
 The exe isn't code-signed, so Windows may show a SmartScreen warning the first time. Choose **More info → Run anyway**, or build it yourself (option 2).
 
+To check a downloaded exe really was built from this repo's code, run this with the [GitHub CLI](https://cli.github.com/) in the folder you saved it to:
+
+```
+gh attestation verify CMDPlus.exe --repo andmca/cmd-plus
+```
+
+It confirms GitHub built that exact file from a commit in this repo, and shows which commit. Every exe built by GitHub Actions has this signed record, which you can also see on the repo's [Attestations](../../attestations) page.
+
 **Option 2: build it yourself.** Clone or download this repo and double-click `build.cmd`. It produces `CMDPlus.exe` in the same folder using the C# compiler that ships with Windows, so you don't need Visual Studio or an SDK.
 
 ## Shortcuts
