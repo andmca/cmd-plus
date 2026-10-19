@@ -9,6 +9,7 @@ partial class MainForm
     const int GWL_STYLE = -16;
     const int WS_CAPTION = 0x00C00000, WS_THICKFRAME = 0x00040000, WS_SYSMENU = 0x00080000;
     const int WS_MINIMIZEBOX = 0x00020000, WS_MAXIMIZEBOX = 0x00010000;
+    const int WS_CHILD = 0x40000000, WS_POPUP = unchecked((int)0x80000000);
     const int SW_HIDE = 0, SW_SHOW = 5;
     const int WM_CLOSE = 0x0010, WM_SYSCOMMAND = 0x0112, WM_HOTKEY = 0x0312;
     const int ID_CONSOLE_COPY = 0xFFF0, ID_CONSOLE_MARK = 0xFFF2;   // the console window's Edit > Copy / Mark
