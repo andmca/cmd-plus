@@ -127,8 +127,11 @@ partial class MainForm : Form
         };
         tabs.TabPages.Add(page);
 
-        const int frame = WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-        SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) & ~frame);
+        // Make it a true child window (WS_CHILD), not just a top-level window placed inside the tab. Without this,
+        // giving the console focus also made it the active window, so Windows didn't treat CMD+ itself as active,
+        // and clicking CMD+ on the taskbar didn't bring it to the front.
+        const int frame = WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP;
+        SetWindowLong(h, GWL_STYLE, (GetWindowLong(h, GWL_STYLE) & ~frame) | WS_CHILD);
         SetParent(h, page.Handle);
         ShowWindow(h, SW_SHOW);
         page.Resize += delegate { Fit(page); };
@@ -245,7 +248,9 @@ partial class MainForm : Form
             var s = SessionOf(page);
             if (s == null) continue;
             ShowWindow(s.Hwnd, SW_HIDE);
-            SetParent(s.Hwnd, IntPtr.Zero);   // detach first so its teardown never waits on this window
+            // Detach first so its teardown never waits on this window. A window without a parent can't be a child.
+            SetWindowLong(s.Hwnd, GWL_STYLE, GetWindowLong(s.Hwnd, GWL_STYLE) & ~WS_CHILD);
+            SetParent(s.Hwnd, IntPtr.Zero);
             PostMessage(s.Hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
         }
         base.OnFormClosing(e);
