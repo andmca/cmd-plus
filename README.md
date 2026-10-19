@@ -26,6 +26,7 @@ It confirms GitHub built that exact file from a commit in this repo, and shows w
 | --- | --- |
 | Ctrl+T or **+** after the tabs | New cmd tab |
 | Ctrl+Shift+T | New Copilot tab |
+| The arrow beside **+** | Choose a new cmd or Copilot tab |
 | Drag with the mouse | Select text (in a Copilot tab, press **Copy** first) |
 | Ctrl+Shift+C or **Copy** | Copy the selected text, or start selecting if nothing is selected (**Ctrl+C** and **Enter** also copy while text is selected; **Esc** clears the selection) |
 | Ctrl+Shift+V | Paste |

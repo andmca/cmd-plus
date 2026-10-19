@@ -1,5 +1,6 @@
 // The row of tabs above the consoles, drawn in the style of Windows 11 Notepad: each tab has an X to close it,
-// and + after the last tab opens a new cmd tab. It drives a PageHost, which holds the consoles.
+// + after the last tab opens a new cmd tab, and the arrow beside it opens a menu of tab types (cmd or Copilot).
+// It drives a PageHost, which holds the consoles.
 
 using System;
 using System.Drawing;
@@ -33,10 +34,12 @@ class TabStrip : Control
     readonly TabControl tabs;
     readonly ToolTip tip = new ToolTip();
     int hoverTab = -1;
-    bool hoverClose, hoverPlus;
+    bool hoverClose, hoverPlus, hoverMenu;
 
     public event Action<TabPage> CloseRequested;
     public event Action NewTabRequested;
+    // Shown by the arrow beside +.
+    public ContextMenuStrip NewTabMenu;
 
     public TabStrip(TabControl tabs)
     {
@@ -65,7 +68,7 @@ class TabStrip : Control
     {
         int n = tabs.TabCount;
         int left = Px(8), top = Px(6);
-        int width = n == 0 ? 0 : Math.Max(Px(72), Math.Min(Px(220), (Width - left - Px(44)) / n));
+        int width = n == 0 ? 0 : Math.Max(Px(72), Math.Min(Px(220), (Width - left - Px(64)) / n));
         var rects = new Rectangle[n];
         for (int i = 0; i < n; i++) rects[i] = new Rectangle(left + i * width, top, width, Height - top);
         return rects;
@@ -84,13 +87,21 @@ class TabStrip : Control
         return new Rectangle(x, top + (Height - top - size) / 2, size, size);
     }
 
-    // Which tab is at a point, and whether it's on that tab's X or on the + button.
-    void HitTest(Point p, out int tab, out bool onClose, out bool onPlus)
+    // The arrow just after +, which opens the new-tab menu.
+    Rectangle MenuRect(Rectangle plus)
+    {
+        return new Rectangle(plus.Right + Px(1), plus.Top, Px(20), plus.Height);
+    }
+
+    // Which tab is at a point, and whether it's on that tab's X, the + button or the arrow beside it.
+    void HitTest(Point p, out int tab, out bool onClose, out bool onPlus, out bool onMenu)
     {
         var rects = TabRects();
+        Rectangle plus = PlusRect(rects);
         tab = -1;
         onClose = false;
-        onPlus = PlusRect(rects).Contains(p);
+        onPlus = plus.Contains(p);
+        onMenu = MenuRect(plus).Contains(p);
         for (int i = 0; i < rects.Length; i++)
         {
             if (!rects[i].Contains(p)) continue;
@@ -105,14 +116,16 @@ class TabStrip : Control
     {
         base.OnMouseMove(e);
         int tab;
-        bool onClose, onPlus;
-        HitTest(e.Location, out tab, out onClose, out onPlus);
-        if (tab == hoverTab && onClose == hoverClose && onPlus == hoverPlus) return;
+        bool onClose, onPlus, onMenu;
+        HitTest(e.Location, out tab, out onClose, out onPlus, out onMenu);
+        if (tab == hoverTab && onClose == hoverClose && onPlus == hoverPlus && onMenu == hoverMenu) return;
 
         hoverTab = tab;
         hoverClose = onClose;
         hoverPlus = onPlus;
+        hoverMenu = onMenu;
         tip.SetToolTip(this, onPlus ? "New cmd tab  (Ctrl+T)"
+                           : onMenu ? "New cmd or Copilot tab"
                            : onClose ? "Close tab  (Ctrl+W)"
                            : tab >= 0 ? tabs.TabPages[tab].Text
                            : null);
@@ -123,7 +136,7 @@ class TabStrip : Control
     {
         base.OnMouseLeave(e);
         hoverTab = -1;
-        hoverClose = hoverPlus = false;
+        hoverClose = hoverPlus = hoverMenu = false;
         tip.SetToolTip(this, null);
         Invalidate();
     }
@@ -132,8 +145,8 @@ class TabStrip : Control
     {
         base.OnMouseDown(e);
         int tab;
-        bool onClose, onPlus;
-        HitTest(e.Location, out tab, out onClose, out onPlus);
+        bool onClose, onPlus, onMenu;
+        HitTest(e.Location, out tab, out onClose, out onPlus, out onMenu);
         if (e.Button == MouseButtons.Left && tab >= 0 && !onClose) tabs.SelectedIndex = tab;
     }
 
@@ -141,10 +154,15 @@ class TabStrip : Control
     {
         base.OnMouseUp(e);
         int tab;
-        bool onClose, onPlus;
-        HitTest(e.Location, out tab, out onClose, out onPlus);
+        bool onClose, onPlus, onMenu;
+        HitTest(e.Location, out tab, out onClose, out onPlus, out onMenu);
 
         if (e.Button == MouseButtons.Left && onPlus && NewTabRequested != null) NewTabRequested();
+        else if (e.Button == MouseButtons.Left && onMenu && NewTabMenu != null)
+        {
+            Rectangle menu = MenuRect(PlusRect(TabRects()));
+            NewTabMenu.Show(this, new Point(menu.Left, menu.Bottom));
+        }
         else if (tab >= 0 && CloseRequested != null &&
                  ((e.Button == MouseButtons.Left && onClose) || e.Button == MouseButtons.Middle))
             CloseRequested(tabs.TabPages[tab]);
@@ -201,6 +219,13 @@ class TabStrip : Control
             g.DrawLine(pen, p.X - half, p.Y, p.X + half, p.Y);
             g.DrawLine(pen, p.X, p.Y - half, p.X, p.Y + half);
         }
+
+        Rectangle menuArrow = MenuRect(plus);
+        if (hoverMenu) FillButton(g, menuArrow, ButtonHover);
+        float w = Px(3.5F), h = Px(2);
+        PointF m = Centre(menuArrow);
+        using (var pen = new Pen(Ink, Px(1.2F)))
+            g.DrawLines(pen, new[] { new PointF(m.X - w, m.Y - h), new PointF(m.X, m.Y + h), new PointF(m.X + w, m.Y - h) });
     }
 
     void FillButton(Graphics g, Rectangle r, Color colour)
