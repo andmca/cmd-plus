@@ -37,6 +37,14 @@ partial class MainForm : Form
         tabStrip.NewTabRequested += NewCmdTab;
         tabStrip.CloseRequested += CloseTab;
 
+        // The menu under the arrow beside +. The shortcuts are only shown here; the hotkeys handle the keys.
+        var newTabMenu = new ContextMenuStrip { Renderer = new ToolbarRenderer() };
+        newTabMenu.Items.Add(new ToolStripMenuItem("cmd", null, delegate { NewCmdTab(); }) { ShortcutKeyDisplayString = "Ctrl+T" });
+        newTabMenu.Items.Add(new ToolStripMenuItem("Copilot", null, delegate { NewCopilotTab(); }) { ShortcutKeyDisplayString = "Ctrl+Shift+T" });
+        // Give the console its focus back if the menu is dismissed without choosing anything.
+        newTabMenu.Closed += delegate { BeginInvoke((MethodInvoker)delegate { FitAndFocus(tabs.SelectedTab); }); };
+        tabStrip.NewTabMenu = newTabMenu;
+
         // Button text is "Name  Shortcut"; the renderer draws the shortcut in grey.
         var toolbar = new ToolStrip
         {
@@ -45,8 +53,6 @@ partial class MainForm : Form
             Font = new Font("Consolas", 9F),
             Padding = new Padding(6, 3, 6, 3)
         };
-        toolbar.Items.Add(new ToolStripButton("+ cmd  Ctrl+T", null, delegate { NewCmdTab(); }));
-
         copilotButton.Text = "+ Copilot  Ctrl+Shift+T";
         copilotButton.ButtonClick += delegate { NewCopilotTab(); };
         copilotButton.DropDownItems.Add("Start Copilot in another folder...", null, delegate { ChooseFolderAndStartCopilot(); });
